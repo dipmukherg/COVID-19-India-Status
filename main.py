@@ -6,8 +6,6 @@ import bs4
 import pandas as pd
 import numpy as np
 import os
-os.environ['PROJ_LIB'] = r"C:\Users\dipayan.mukhopadhyay\AppData\Local\Continuum\anaconda3\pkgs\proj4-5.2.0-h6538335_1006\Library\share"
-from mpl_toolkits.basemap import Basemap
 from geopy.geocoders import Nominatim
 from plotly import graph_objs as go
 import cufflinks as cf
@@ -40,10 +38,10 @@ for idx,row in enumerate(rows):
 
 df = pd.DataFrame(data=Rows[1:-1],columns=Rows[0])
 df.drop(['S. No.'],axis=1,inplace=True)
-df['Total Confirmed cases (Indian National)']=df['Total Confirmed cases (Indian National)'].astype(int)
-df['Total Confirmed cases ( Foreign National )']=df['Total Confirmed cases ( Foreign National )'].astype(int)
-df['Cured/Discharged/Migrated']=df['Cured/Discharged/Migrated'].astype(int)
-df['Death']=df['Death'].astype(int)
+df['Total Confirmed cases (Indian National)']=df['Total Confirmed cases (Indian National)'].str.strip('#').astype(int)
+df['Total Confirmed cases ( Foreign National )']=df['Total Confirmed cases ( Foreign National )'].str.strip('#').astype(int)
+df['Cured/Discharged/Migrated']=df['Cured/Discharged/Migrated'].str.strip('#').astype(int)
+df['Death']=df['Death'].str.strip('#').astype(int)
 
 df_last = ['Total',df['Total Confirmed cases (Indian National)'].sum(),df['Total Confirmed cases ( Foreign National )'].sum(),df['Cured/Discharged/Migrated'].sum(),df['Death'].sum()]
 df=df.append(pd.Series(df_last,index=df.columns),ignore_index=True)
@@ -89,10 +87,13 @@ df_daily = pd.read_csv('COVID_Daily.csv')
 import datetime
 
 today=datetime.date.today().strftime('%d-%m-%Y')
-today_total=df.iloc[-1,1]
+today_total=df.iloc[-1,1]+df.iloc[-1,2]
 
 if df_daily.iloc[-1,0]!=today:
     df_daily=df_daily.append(pd.Series([today,today_total],index=df_daily.columns),ignore_index=True)
+    df_daily.to_csv('COVID_Daily.csv',index=False)
+elif df_daily.iloc[-1,1]!=today_total:
+    df_daily.iloc[-1,1]=today_total
     df_daily.to_csv('COVID_Daily.csv',index=False)
 else:
     pass
@@ -227,4 +228,4 @@ app.css.append_css({
 })
 
 if __name__=="__main__":
-    app.run_server(debug=True,port=5050)
+    app.run_server(debug=True)
